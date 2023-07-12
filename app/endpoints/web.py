@@ -2,7 +2,7 @@ from starlette.endpoints import HTTPEndpoint
 from starlette.responses import Response, JSONResponse
 from starlette.requests import Request
 
-from .models import SingleChoice
+from app.models import SingleChoice
 
 
 class Hello(HTTPEndpoint):

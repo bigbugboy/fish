@@ -1,3 +1,4 @@
 starlette==0.28.0
 uvicorn==0.22.0
 tortoise-orm==0.19.3
+PyJWT==2.7.0

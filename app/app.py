@@ -1,17 +1,7 @@
-import logging
-import typing
-
-from starlette.applications import Starlette
-from starlette.routing import BaseRoute
+from common.app import BaseApp
 
 
-class App(Starlette):
+class App(BaseApp):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.logger = logging.getLogger(self.__class__.__name__)
-
-    def register_routes(self, routes: typing.List[BaseRoute]):
-        self.routes.extend(routes)
-        for r in routes:
-            self.logger.debug(f"Add route: {r}")
+    async def ready(self):
+        pass
