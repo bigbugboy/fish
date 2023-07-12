@@ -6,52 +6,53 @@ from starlette.requests import Request
 from common.base_endpoints import JwtEndpoint
 from common.exceptions import AuthException, SessionExpireException
 from ..extensions import jwt
-from ..models import AdminUser, SingleChoice
+from .. import models
 
 
-class Login(JwtEndpoint):
+class LoginEndpoint(JwtEndpoint):
     JWT_KEY = 'admin_token'
     jwt = jwt
 
     async def post(self, req: Request) -> JSONResponse:
         data = await req.json()
-        if not (data['username'] == 'jwt' and data['password'] == 'bbb'):
+        user = await models.AdminUser.get(username=data['username'])
+        if user.password != data['password']:
             raise AuthException("Wrong username or password")
 
-        self.jwt_data = {'user_id': 520}
-        return JSONResponse({'name': 'jwt', 'avatar': ''})
+        self.jwt_data = {'user_id': user.id}
+        return JSONResponse({'name': user.username, 'avatar': ''})
 
 
-class LoginRequireEndpoint(JwtEndpoint):
-    JWT_KEY = Login.JWT_KEY
+class AuthRequireEndpoint(JwtEndpoint):
+    JWT_KEY = LoginEndpoint.JWT_KEY
     jwt = jwt
-    user: AdminUser
+    user: models.AdminUser
 
-    # async def on_request(self, req: Request):
-    #     await super().on_request(req)
-    #     if not self.jwt_data:
-    #         raise SessionExpireException('Login required')
-    #
-    #     self.user = await AdminUser.get(id=self.jwt_data["user_id"])
-    #     assert self.user
+    async def on_request(self, req: Request):
+        await super().on_request(req)
+        if not self.jwt_data:
+            raise SessionExpireException('Login required')
 
-
-class UserEndpoint(LoginRequireEndpoint):
-    async def post(self, req: Request) -> JSONResponse:
-        data = await req.json()
-        print(111)
-        print(data)
-        return JSONResponse({})
+        self.user = await models.AdminUser.get(id=self.jwt_data["user_id"])
+        assert self.user
 
 
-class SingleChoiceEndpoint(LoginRequireEndpoint):
+class UserEndpoint(AuthRequireEndpoint):
+    async def get(self, req: Request) -> JSONResponse:
+        user_id = req.query_params.get('id')
+        user = await models.AdminUser.get(id=user_id)
+        return JSONResponse(user.to_dict())
+
+
+class SingleChoiceEndpoint(AuthRequireEndpoint):
     async def get(self, req: Request) -> JSONResponse:
         pk = req.query_params.get('id')
         if pk:
-            sc = await SingleChoice.get(id=pk)
+            sc = await models.SingleChoice.get(id=pk)
             return JSONResponse(sc.to_dict())
 
-        scs = await SingleChoice.all()
+        scs = await models.SingleChoice.all()
         return JSONResponse([sc.to_dict() for sc in scs])
+
 
 

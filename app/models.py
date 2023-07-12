@@ -10,7 +10,7 @@ class BaseModel(Model):
 
     def to_dict(self):
         return {
-            field.name: getattr(self, field.name) for field in self._meta.fields
+            field: getattr(self, field) for field in self._meta.fields
         }
 
 
@@ -51,4 +51,4 @@ class AdminUser(BaseModel):
 
     id = fields.IntField(pk=True)
     username = fields.CharField(max_length=20, unique=True)
-    password = fields.CharField(max_length=20, unique=True)
+    password = fields.CharField(max_length=20)
