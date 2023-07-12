@@ -48,11 +48,73 @@ class SingleChoiceEndpoint(AuthRequireEndpoint):
     async def get(self, req: Request) -> JSONResponse:
         pk = req.query_params.get('id')
         if pk:
-            sc = await models.SingleChoice.get(id=pk)
+            sc = await models.SingleChoice.filter(status=1, id=pk).first()
             return JSONResponse(sc.to_dict())
 
-        scs = await models.SingleChoice.all()
+        scs = await models.SingleChoice.filter(status=1).all()
         return JSONResponse([sc.to_dict() for sc in scs])
 
+    async def post(self, req: Request) -> JSONResponse:
+        data = await req.json()
+        sc = await models.SingleChoice.create(
+            question=data['question'],
+            choice_a=data['choice_a'],
+            choice_b=data['choice_b'],
+            choice_c=data['choice_c'],
+            choice_d=data['choice_d'],
+            choice_right=data['choice_right'],
+            desc=data['desc'],
+            level_id=data['level_id'],
+            category_id=['category_id'],
+        )
+        return JSONResponse(sc.to_dict())
+
+    async def put(self, req: Request):
+        data = await req.json()
+        sc_id = data.pop('id')
+        sc = await models.SingleChoice.get(id=sc_id)
+        for k, v in data.items():
+            setattr(sc, k, v)
+        await sc.save()
+        return JSONResponse(sc.to_dict())
+
+    async def delete(self, req: Request):
+        data = await req.json()
+        await models.SingleChoice.filter(id=data['id']).update(status=0)
+        return JSONResponse({'status': 'success'})
 
 
+class LevelEndpoint(AuthRequireEndpoint):
+    async def get(self, req: Request) -> JSONResponse:
+        levels = await models.Level.all()
+        return JSONResponse([l.to_dict() for l in levels])
+
+    async def post(self, req: Request):
+        data = await req.json()
+        level = await models.Level.create(name=data['name'])
+        return JSONResponse(level.to_dict())
+
+    async def put(self, req: Request) -> JSONResponse:
+        data = await req.json()
+        level = await models.Level.get(id=data['id'])
+        level.name = data['name']
+        await level.save()
+        return JSONResponse(level.to_dict())
+
+
+class CategoryEndpoint(AuthRequireEndpoint):
+    async def get(self, req: Request) -> JSONResponse:
+        cs = await models.Category.all()
+        return JSONResponse([c.to_dict() for c in cs])
+
+    async def post(self, req: Request):
+        data = await req.json()
+        c = await models.Category.create(name=data['name'])
+        return JSONResponse(c.to_dict())
+
+    async def put(self, req: Request) -> JSONResponse:
+        data = await req.json()
+        c = await models.Category.get(id=data['id'])
+        c.name = data['name']
+        await c.save()
+        return JSONResponse(c.to_dict())
