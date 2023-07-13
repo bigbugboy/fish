@@ -101,6 +101,11 @@ class LevelEndpoint(AuthRequireEndpoint):
         await level.save()
         return JSONResponse(level.to_dict())
 
+    async def delete(self, req: Request) -> JSONResponse:
+        data = await req.json()
+        await models.Level.filter(id=data['id']).delete()
+        return JSONResponse({})
+
 
 class CategoryEndpoint(AuthRequireEndpoint):
     async def get(self, req: Request) -> JSONResponse:
@@ -118,3 +123,8 @@ class CategoryEndpoint(AuthRequireEndpoint):
         c.name = data['name']
         await c.save()
         return JSONResponse(c.to_dict())
+
+    async def delete(self, req: Request) -> JSONResponse:
+        data = await req.json()
+        await models.Category.filter(id=data['id']).delete()
+        return JSONResponse({})

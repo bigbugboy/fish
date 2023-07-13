@@ -1,10 +1,9 @@
 <template>
-  <div>login</div>
+  <h2>level</h2>
 </template>
 
 <script>
 export default {
-  name: 'Login',
 
 }
 </script>
